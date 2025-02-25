@@ -1,17 +1,15 @@
 package com.monsterkot.hotelservice.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
 import java.time.LocalTime;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class ArrivalTimeDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
     @NotNull(message = "Check-in time must be filled in")

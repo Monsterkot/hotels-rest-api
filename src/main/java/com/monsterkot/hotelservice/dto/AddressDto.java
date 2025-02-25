@@ -1,14 +1,12 @@
 package com.monsterkot.hotelservice.dto;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class AddressDto {
     @NotBlank(message = "House number must be filled in")
     private String houseNumber;

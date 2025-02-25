@@ -4,7 +4,6 @@ import com.monsterkot.hotelservice.dto.*;
 import com.monsterkot.hotelservice.exception.HotelNotFoundException;
 import com.monsterkot.hotelservice.model.*;
 import com.monsterkot.hotelservice.repository.HotelRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,13 +17,13 @@ public class HotelService {
 
     public List<HotelShortDto> getAllHotels() {
         return hotelRepository.findAll().stream()
-                .map(hotel -> new HotelShortDto(
-                        hotel.getId(),
-                        hotel.getName(),
-                        hotel.getDescription(),
-                        hotel.getAddress().getFormattedAddress(),
-                        hotel.getContactInfo().getPhone()
-                ))
+                .map(hotel -> HotelShortDto.builder()
+                        .id(hotel.getId())
+                        .name(hotel.getName())
+                        .description(hotel.getDescription())
+                        .address(hotel.getAddress().getFormattedAddress())
+                        .phone(hotel.getContactInfo().getPhone())
+                        .build())
                 .collect(Collectors.toList());
     }
 
@@ -32,30 +31,30 @@ public class HotelService {
         Hotel hotel = hotelRepository.findById(id)
                 .orElseThrow(() -> new HotelNotFoundException(id));
 
-        return new HotelFullDto(
-                hotel.getId(),
-                hotel.getName(),
-                hotel.getDescription(),
-                hotel.getBrand(),
-                new AddressDto(
-                        hotel.getAddress().getHouseNumber(),
-                        hotel.getAddress().getStreet(),
-                        hotel.getAddress().getCity(),
-                        hotel.getAddress().getCountry(),
-                        hotel.getAddress().getPostCode()
-                ),
-                new ContactsDto(
-                        hotel.getContactInfo().getPhone(),
-                        hotel.getContactInfo().getEmail()
-                ),
-                new ArrivalTimeDto(
-                        hotel.getArrivalTime().getCheckIn(),
-                        hotel.getArrivalTime().getCheckOut()
-                ),
-                hotel.getAmenities().stream()
+        return HotelFullDto.builder()
+                .id(hotel.getId())
+                .name(hotel.getName())
+                .description(hotel.getDescription())
+                .brand(hotel.getBrand())
+                .address(AddressDto.builder()
+                        .houseNumber(hotel.getAddress().getHouseNumber())
+                        .street(hotel.getAddress().getStreet())
+                        .city(hotel.getAddress().getCity())
+                        .country(hotel.getAddress().getCountry())
+                        .postCode(hotel.getAddress().getPostCode())
+                        .build())
+                .contacts(ContactsDto.builder()
+                        .phone(hotel.getContactInfo().getPhone())
+                        .email(hotel.getContactInfo().getEmail())
+                        .build())
+                .arrivalTime(ArrivalTimeDto.builder()
+                        .checkIn(hotel.getArrivalTime().getCheckIn())
+                        .checkOut(hotel.getArrivalTime().getCheckOut())
+                        .build())
+                .amenities(hotel.getAmenities().stream()
                         .map(Amenity::getName)
-                        .collect(Collectors.toList())
-        );
+                        .collect(Collectors.toList()))
+                .build();
     }
 
     public List<HotelShortDto> searchHotels(String name, String brand, String city, String country, List<String> amenities) {
@@ -71,53 +70,44 @@ public class HotelService {
                                                 .collect(Collectors.toSet())
                                                 .contains(a.getName().toLowerCase())))
                 )
-                .map(hotel -> new HotelShortDto(
-                        hotel.getId(),
-                        hotel.getName(),
-                        hotel.getDescription(),
-                        hotel.getAddress().getFormattedAddress(),
-                        hotel.getContactInfo().getPhone()
-                ))
+                .map(hotel -> HotelShortDto.builder()
+                        .id(hotel.getId())
+                        .name(hotel.getName())
+                        .description(hotel.getDescription())
+                        .address(hotel.getAddress().getFormattedAddress())
+                        .phone(hotel.getContactInfo().getPhone())
+                        .build())
                 .collect(Collectors.toList());
     }
 
     public HotelShortDto addHotel(HotelCreateDto hotelCreateDto) {
-        Hotel hotel = new Hotel();
-        hotel.setName(hotelCreateDto.getName());
-
-        hotel.setDescription(hotelCreateDto.getDescription());
-
-
-        hotel.setBrand(hotelCreateDto.getBrand());
-
-        Address address = new Address(
-                hotelCreateDto.getAddress().getHouseNumber(),
-                hotelCreateDto.getAddress().getStreet(),
-                hotelCreateDto.getAddress().getCity(),
-                hotelCreateDto.getAddress().getCountry(),
-                hotelCreateDto.getAddress().getPostCode());
-        hotel.setAddress(address);
-
-        Contacts contacts = new Contacts(
-                hotelCreateDto.getContacts().getPhone(),
-                hotelCreateDto.getContacts().getEmail());
-        hotel.setContactInfo(contacts);
-
-        ArrivalTime arrivalTime = new ArrivalTime(
-                hotelCreateDto.getArrivalTime().getCheckIn(),
-                hotelCreateDto.getArrivalTime().getCheckOut());
-        hotel.setArrivalTime(arrivalTime);
-
+        Hotel hotel = Hotel.builder()
+                .name(hotelCreateDto.getName())
+                .description(hotelCreateDto.getDescription())
+                .brand(hotelCreateDto.getBrand())
+                .address(new Address(
+                        hotelCreateDto.getAddress().getHouseNumber(),
+                        hotelCreateDto.getAddress().getStreet(),
+                        hotelCreateDto.getAddress().getCity(),
+                        hotelCreateDto.getAddress().getCountry(),
+                        hotelCreateDto.getAddress().getPostCode()))
+                .contactInfo(new Contacts(
+                        hotelCreateDto.getContacts().getPhone(),
+                        hotelCreateDto.getContacts().getEmail()))
+                .arrivalTime(new ArrivalTime(
+                        hotelCreateDto.getArrivalTime().getCheckIn(),
+                        hotelCreateDto.getArrivalTime().getCheckOut()))
+                .build();
 
         hotel = hotelRepository.save(hotel);
 
-        return new HotelShortDto(
-                hotel.getId(),
-                hotel.getName(),
-                hotel.getDescription(),
-                hotel.getAddress().getFormattedAddress(),
-                hotel.getContactInfo().getPhone()
-        );
+        return HotelShortDto.builder()
+                .id(hotel.getId())
+                .name(hotel.getName())
+                .description(hotel.getDescription())
+                .address(hotel.getAddress().getFormattedAddress())
+                .phone(hotel.getContactInfo().getPhone())
+                .build();
     }
 
 }
