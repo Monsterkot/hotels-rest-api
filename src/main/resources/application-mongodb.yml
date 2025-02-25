@@ -1,0 +1,12 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/hotel_db
+      auto-index-creation: true
+
+  jpa:
+    database-platform: org.hibernate.dialect.MongoDialect
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
