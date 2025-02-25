@@ -28,7 +28,7 @@ public class Hotel {
 
     @Embedded
     @JoinColumn(name = "contact_info_id", referencedColumnName = "id")
-    private ContactInfo contactInfo;
+    private Contacts contactInfo;
 
     @Embedded
     @JoinColumn(name = "arrival_time_id", referencedColumnName = "id")
