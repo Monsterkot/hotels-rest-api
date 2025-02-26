@@ -1,5 +1,4 @@
 package com.monsterkot.hotelservice.controller;
-
 import com.monsterkot.hotelservice.dto.HotelCreateDto;
 import com.monsterkot.hotelservice.dto.HotelFullDto;
 import com.monsterkot.hotelservice.dto.HotelShortDto;
@@ -10,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Map;
 
@@ -65,5 +63,11 @@ public class HotelController {
     ) {
         HotelFullDto updatedHotel = hotelService.addAmenities(id, amenities);
         return ResponseEntity.ok(updatedHotel);
+    }
+
+    @GetMapping("/histogram/{param}")
+    public ResponseEntity<Map<String, Long>> getHistogram(@PathVariable String param) {
+        Map<String, Long> histogram = hotelService.getHistogram(param);
+        return ResponseEntity.ok(histogram);
     }
 }

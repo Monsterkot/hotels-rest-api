@@ -1,7 +1,7 @@
 package com.monsterkot.hotelservice.service;
-
 import com.monsterkot.hotelservice.dto.*;
 import com.monsterkot.hotelservice.exception.HotelNotFoundException;
+import com.monsterkot.hotelservice.exception.InvalidParameterException;
 import com.monsterkot.hotelservice.model.*;
 import com.monsterkot.hotelservice.repository.AmenityRepository;
 import com.monsterkot.hotelservice.repository.HotelRepository;
@@ -9,11 +9,7 @@ import com.monsterkot.hotelservice.utils.HotelMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,10 +40,12 @@ public class HotelService {
                                 (city == null || hotel.getAddress().getCity().equalsIgnoreCase(city)) &&
                                 (country == null || hotel.getAddress().getCountry().equalsIgnoreCase(country)) &&
                                 (amenities == null || hotel.getAmenities().stream()
-                                        .anyMatch(a -> amenities.stream()
+                                        .map(a -> a.getName().toLowerCase())
+                                        .collect(Collectors.toSet())
+                                        .containsAll(amenities.stream()
                                                 .map(String::toLowerCase)
-                                                .collect(Collectors.toSet())
-                                                .contains(a.getName().toLowerCase())))
+                                                .collect(Collectors.toSet()))
+                                )
                 )
                 .map(hotelMapper::toHotelShortDto)
                 .collect(Collectors.toList());
@@ -98,7 +96,7 @@ public class HotelService {
                 .map(name -> Amenity.builder().name(name).build())
                 .toList();
 
-        if (!newAmenities.isEmpty()){
+        if (!newAmenities.isEmpty()) {
             newAmenities = amenityRepository.saveAll(newAmenities);
         }
 
@@ -110,6 +108,22 @@ public class HotelService {
         hotel = hotelRepository.save(hotel);
 
         return hotelMapper.toHotelFullDto(hotel);
+    }
+
+    public Map<String, Long> getHistogram(String param) {
+        List<Object[]> results = switch (param.toLowerCase()) {
+            case "city" -> hotelRepository.countHotelsByCity();
+            case "brand" -> hotelRepository.countHotelsByBrand();
+            case "country" -> hotelRepository.countHotelsByCountry();
+            case "amenities" -> hotelRepository.countHotelsByAmenities();
+            default -> throw new InvalidParameterException(param);
+        };
+
+        return results.stream()
+                .collect(Collectors.toMap(
+                        row -> (String) row[0],
+                        row -> (Long) row[1]
+                ));
     }
 
 }
