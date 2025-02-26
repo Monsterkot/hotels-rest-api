@@ -1,9 +1,7 @@
 package com.monsterkot.hotelservice.model;
 import jakarta.persistence.Embeddable;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
 import java.time.LocalTime;
 
 @Embeddable
@@ -11,6 +9,7 @@ import java.time.LocalTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ArrivalTime {
     private LocalTime checkIn;
     private LocalTime checkOut;
