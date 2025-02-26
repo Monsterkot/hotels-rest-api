@@ -23,6 +23,9 @@ http://localhost:8092/api-docs
 http://localhost:8092/h2-console
 ```
 
+## Switching Between Databases
+To quickly switch between different databases, update the active profile in the `application.yml` file.
+
 ## Running the Application
 ```
 mvn spring-boot:run
