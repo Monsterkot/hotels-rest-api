@@ -22,15 +22,16 @@ public class HotelController {
 
     private final HotelService hotelService;
 
-
     @GetMapping("/hotels")
-    public List<HotelShortDto> getAllHotels() {
-        return hotelService.getAllHotels();
+    public ResponseEntity<List<HotelShortDto>> getAllHotels() {
+        List<HotelShortDto> hotels = hotelService.getAllHotels();
+        return ResponseEntity.ok(hotels);
     }
 
     @GetMapping("/hotels/{id}")
-    public HotelFullDto getHotelById(@PathVariable Long id) {
-        return hotelService.getHotelById(id);
+    public ResponseEntity<HotelFullDto> getHotelById(@PathVariable Long id) {
+        HotelFullDto hotel = hotelService.getHotelById(id);
+        return ResponseEntity.ok(hotel);
     }
 
     @GetMapping("/search")
@@ -50,9 +51,19 @@ public class HotelController {
 
         return ResponseEntity.ok(result);
     }
+
     @PostMapping("/hotels")
-    public ResponseEntity<HotelShortDto> addHotel(@Valid @RequestBody HotelCreateDto hotelCreateDto){
+    public ResponseEntity<HotelShortDto> addHotel(@Valid @RequestBody HotelCreateDto hotelCreateDto) {
         HotelShortDto addedHotel = hotelService.addHotel(hotelCreateDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(addedHotel);
+    }
+
+    @PostMapping("/hotels/{id}/amenities")
+    public ResponseEntity<HotelFullDto> addAmenities(
+            @PathVariable Long id,
+            @RequestBody List<String> amenities
+    ) {
+        HotelFullDto updatedHotel = hotelService.addAmenities(id, amenities);
+        return ResponseEntity.ok(updatedHotel);
     }
 }

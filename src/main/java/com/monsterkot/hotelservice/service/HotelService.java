@@ -3,27 +3,29 @@ package com.monsterkot.hotelservice.service;
 import com.monsterkot.hotelservice.dto.*;
 import com.monsterkot.hotelservice.exception.HotelNotFoundException;
 import com.monsterkot.hotelservice.model.*;
+import com.monsterkot.hotelservice.repository.AmenityRepository;
 import com.monsterkot.hotelservice.repository.HotelRepository;
+import com.monsterkot.hotelservice.utils.HotelMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class HotelService {
     private final HotelRepository hotelRepository;
+    private final AmenityRepository amenityRepository;
+    private final HotelMapper hotelMapper;
 
     public List<HotelShortDto> getAllHotels() {
         return hotelRepository.findAll().stream()
-                .map(hotel -> HotelShortDto.builder()
-                        .id(hotel.getId())
-                        .name(hotel.getName())
-                        .description(hotel.getDescription())
-                        .address(hotel.getAddress().getFormattedAddress())
-                        .phone(hotel.getContactInfo().getPhone())
-                        .build())
+                .map(hotelMapper::toHotelShortDto)
                 .collect(Collectors.toList());
     }
 
@@ -31,30 +33,7 @@ public class HotelService {
         Hotel hotel = hotelRepository.findById(id)
                 .orElseThrow(() -> new HotelNotFoundException(id));
 
-        return HotelFullDto.builder()
-                .id(hotel.getId())
-                .name(hotel.getName())
-                .description(hotel.getDescription())
-                .brand(hotel.getBrand())
-                .address(AddressDto.builder()
-                        .houseNumber(hotel.getAddress().getHouseNumber())
-                        .street(hotel.getAddress().getStreet())
-                        .city(hotel.getAddress().getCity())
-                        .country(hotel.getAddress().getCountry())
-                        .postCode(hotel.getAddress().getPostCode())
-                        .build())
-                .contacts(ContactsDto.builder()
-                        .phone(hotel.getContactInfo().getPhone())
-                        .email(hotel.getContactInfo().getEmail())
-                        .build())
-                .arrivalTime(ArrivalTimeDto.builder()
-                        .checkIn(hotel.getArrivalTime().getCheckIn())
-                        .checkOut(hotel.getArrivalTime().getCheckOut())
-                        .build())
-                .amenities(hotel.getAmenities().stream()
-                        .map(Amenity::getName)
-                        .collect(Collectors.toList()))
-                .build();
+        return hotelMapper.toHotelFullDto(hotel);
     }
 
     public List<HotelShortDto> searchHotels(String name, String brand, String city, String country, List<String> amenities) {
@@ -70,13 +49,7 @@ public class HotelService {
                                                 .collect(Collectors.toSet())
                                                 .contains(a.getName().toLowerCase())))
                 )
-                .map(hotel -> HotelShortDto.builder()
-                        .id(hotel.getId())
-                        .name(hotel.getName())
-                        .description(hotel.getDescription())
-                        .address(hotel.getAddress().getFormattedAddress())
-                        .phone(hotel.getContactInfo().getPhone())
-                        .build())
+                .map(hotelMapper::toHotelShortDto)
                 .collect(Collectors.toList());
     }
 
@@ -101,13 +74,42 @@ public class HotelService {
 
         hotel = hotelRepository.save(hotel);
 
-        return HotelShortDto.builder()
-                .id(hotel.getId())
-                .name(hotel.getName())
-                .description(hotel.getDescription())
-                .address(hotel.getAddress().getFormattedAddress())
-                .phone(hotel.getContactInfo().getPhone())
-                .build();
+        return hotelMapper.toHotelShortDto(hotel);
+    }
+
+    @Transactional
+    public HotelFullDto addAmenities(Long hotelId, List<String> amenities) {
+        Hotel hotel = hotelRepository.findById(hotelId)
+                .orElseThrow(() -> new HotelNotFoundException(hotelId));
+
+        amenities = amenities.stream()
+                .map(name -> name.trim().replaceAll("\\s+", " "))
+                .toList();
+
+        List<String> normalizedAmenities = amenities.stream()
+                .map(String::toLowerCase)
+                .toList();
+
+        List<Amenity> existingAmenities = amenityRepository.findByNameInIgnoreCase(normalizedAmenities);
+
+        List<Amenity> newAmenities = amenities.stream()
+                .filter(name -> existingAmenities.stream()
+                        .noneMatch(a -> a.getName().equalsIgnoreCase(name)))
+                .map(name -> Amenity.builder().name(name).build())
+                .toList();
+
+        if (!newAmenities.isEmpty()){
+            newAmenities = amenityRepository.saveAll(newAmenities);
+        }
+
+        Set<Amenity> updatedAmenities = new HashSet<>(hotel.getAmenities());
+        updatedAmenities.addAll(existingAmenities);
+        updatedAmenities.addAll(newAmenities);
+
+        hotel.setAmenities(new ArrayList<>(updatedAmenities));
+        hotel = hotelRepository.save(hotel);
+
+        return hotelMapper.toHotelFullDto(hotel);
     }
 
 }
