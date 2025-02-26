@@ -3,3 +3,8 @@ spring:
     active: h2
 server:
   port: 8092
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger
